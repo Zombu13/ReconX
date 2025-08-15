@@ -26,24 +26,28 @@ def simple_search(query):
             media_type = record.get('mediah', 'N/A')
             date_found = record.get('date', 'N/A')
 
-            preview = ""
-            try:
-                if bucket and record.get('storageid'):
-                    # Corrected call: Passed positional arguments to FILE_VIEW
-                    preview_content_bytes = intelx_client.FILE_VIEW(
+            preview = "No preview available."
+
+            if bucket and record.get('storageid'):
+                try:
+                    preview_content = intelx_client.FILE_VIEW(
                         record.get('type', 0),
                         record.get('media', 0),
                         record.get('storageid'),
                         bucket
                     )
 
-                    preview = preview_content_bytes.decode('utf-8', errors='replace')
-                    preview = preview.replace('\n', ' ')[:100] + '...'
-                else:
-                    preview = "No preview available."
+                    if preview_content:  # Only process if not None
+                        if isinstance(preview_content, bytes):
+                            preview_content = preview_content.decode('utf-8', errors='replace')
 
-            except Exception as e:
-                preview = f"Could not get preview: {e}"
+                        preview = preview_content.replace('\n', ' ')[:100] + '...'
+                    else:
+                        preview = "Empty preview"
+
+
+                except Exception as e:
+                    preview = f"Could not get preview: {e}"
 
             table_data.append([system_id, bucket, media_type, date_found, preview])
 
